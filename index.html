@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixi Skia Test</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="toolbar">
+        <button id="addRandomShape">Сгенерировать случайную фигуру</button>
+        <button id="nextScene">Следующая сцена</button>
+        <button id="exportPdf">Экспорт в PDF</button>
+      </header>
+
+      <main class="canvases">
+        <section class="canvas-panel">
+          <h2>Canvas 1 — Pixi.js</h2>
+          <div id="pixi-root"></div>
+        </section>
+
+        <section class="canvas-panel">
+          <h2>Canvas 2 — Skia</h2>
+          <canvas id="skia-canvas" width="600" height="400"></canvas>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/src/app/main.ts"></script>
+  </body>
+</html>
