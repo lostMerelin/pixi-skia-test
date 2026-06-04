@@ -7,6 +7,7 @@ import { createDemoScene } from '../pixi/createDemoScene';
 import { initSkia } from '../skia/initSkia';
 import { SkiaRenderer } from '../skia/SkiaRenderer';
 import { bindSkiaPointerEvents } from '../events/bindSkiaPointerEvents';
+import { canExportPdf, exportContainerToPdf } from '../skia/exportPdf';
 import { exportCanvasAsPng } from '../skia/exportCanvasAsPng';
 
 const pixiRootElement = document.querySelector<HTMLDivElement>('#pixi-root');
@@ -34,6 +35,7 @@ pixiApp.stage.addChild(mainContainer);
 
 bindSkiaPointerEvents(skiaCanvas, mainContainer);
 
+let CanvasKitInstance: any | null = null;
 let skiaRenderer: SkiaRenderer | null = null;
 
 addRandomShapeButton?.addEventListener('click', () => {
@@ -53,15 +55,33 @@ nextSceneButton?.addEventListener('click', () => {
 exportPdfButton?.addEventListener('click', () => {
   rerender();
 
-  exportCanvasAsPng(skiaCanvas, 'pixi-skia-export.png');
+  if (!CanvasKitInstance) {
+    console.warn('CanvasKit is not initialized yet');
+    return;
+  }
 
-  console.log('Temporary PNG export completed');
+  if (canExportPdf(CanvasKitInstance)) {
+    exportContainerToPdf(
+      CanvasKitInstance,
+      mainContainer,
+      skiaCanvas.width,
+      skiaCanvas.height,
+    );
+
+    return;
+  }
+
+  console.warn(
+    'PDF backend is not available in this CanvasKit build. Exporting PNG fallback instead.',
+  );
+
+  exportCanvasAsPng(skiaCanvas, 'pixi-skia-export-fallback.png');
 });
 
 async function bootstrapSkia(): Promise<void> {
   try {
     const CanvasKit = await initSkia();
-
+    CanvasKitInstance = CanvasKit;
     const surface = CanvasKit.MakeCanvasSurface(skiaCanvas);
 
     if (!surface) {
@@ -91,6 +111,7 @@ async function bootstrapSkia(): Promise<void> {
     }
   }
 }
+
 
 function rerender(): void {
   pixiApp.renderer.render(pixiApp.stage);
