@@ -6,6 +6,7 @@ type SkCanvas = any;
 type SkPaint = any;
 
 export class SkiaRenderer {
+  private readonly imageCache = new Map<string, any>();
   constructor(
     private readonly CanvasKit: CanvasKitInstance,
     private readonly surface: SkSurface,
@@ -22,20 +23,100 @@ export class SkiaRenderer {
   }
 
   private renderContainer(container: PIXI.Container, canvas: SkCanvas): void {
-    canvas.save();
+  canvas.save();
 
-    this.applyTransform(container, canvas);
+  this.applyTransform(container, canvas);
 
-    for (const child of container.children) {
-      if (child instanceof PIXI.Graphics) {
-        this.renderGraphics(child, canvas);
-      } else if (child instanceof PIXI.Container) {
-        this.renderContainer(child, canvas);
-      }
+  for (const child of container.children) {
+    if (child instanceof PIXI.Graphics) {
+      this.renderGraphics(child, canvas);
+    } else if (child instanceof PIXI.Sprite) {
+      this.renderSprite(child, canvas);
+    } else if (child instanceof PIXI.Container) {
+      this.renderContainer(child, canvas);
     }
-
-    canvas.restore();
   }
+
+  canvas.restore();
+}
+
+private renderSprite(sprite: PIXI.Sprite, canvas: SkCanvas): void {
+  canvas.save();
+
+  this.applyTransform(sprite, canvas);
+
+  const image = this.getSkImageFromSprite(sprite);
+
+  if (!image) {
+    canvas.restore();
+    return;
+  }
+
+  const texture = sprite.texture;
+  const frame = texture.frame;
+
+  const sourceRect = this.CanvasKit.XYWHRect(
+    frame.x,
+    frame.y,
+    frame.width,
+    frame.height,
+  );
+
+  const destinationRect = this.CanvasKit.XYWHRect(
+    -sprite.anchor.x * sprite.width,
+    -sprite.anchor.y * sprite.height,
+    sprite.width,
+    sprite.height,
+  );
+
+  const paint = new this.CanvasKit.Paint();
+
+  paint.setAntiAlias(true);
+
+  canvas.drawImageRect(
+    image,
+    sourceRect,
+    destinationRect,
+    paint,
+  );
+
+  paint.delete();
+
+  canvas.restore();
+}
+
+private getSkImageFromSprite(sprite: PIXI.Sprite): any | null {
+  const texture = sprite.texture;
+  const baseTexture = texture.baseTexture as any;
+  const resource = baseTexture.resource as any;
+  const source = resource?.source as HTMLImageElement | HTMLCanvasElement | undefined;
+
+  if (!source) {
+    console.warn('Sprite source is not available for Skia rendering:', sprite);
+    return null;
+  }
+
+  const cacheKey = source instanceof HTMLImageElement
+    ? source.src
+    : `canvas-${source.width}x${source.height}`;
+
+  const cachedImage = this.imageCache.get(cacheKey);
+
+  if (cachedImage) {
+    return cachedImage;
+  }
+
+  const image = this.CanvasKit.MakeImageFromCanvasImageSource(source);
+
+  if (!image) {
+    console.warn('Cannot create Skia image from sprite source:', sprite);
+    return null;
+  }
+
+  this.imageCache.set(cacheKey, image);
+
+  return image;
+}
 
   private renderGraphics(graphics: PIXI.Graphics, canvas: SkCanvas): void {
     canvas.save();

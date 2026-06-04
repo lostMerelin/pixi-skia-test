@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js-legacy';
 
-export function createDemoScene(): PIXI.Container {
+export async function createDemoScene(): Promise<PIXI.Container> {
   const mainContainer = new PIXI.Container();
   const subContainer = new PIXI.Container();
 
@@ -37,7 +37,25 @@ export function createDemoScene(): PIXI.Container {
   subContainer.position.set(75, 50);
   subContainer.addChild(g3, g4);
 
-  mainContainer.addChild(subContainer, g1, g2);
+  const spriteTexture = await PIXI.Assets.load<PIXI.Texture>('/assets/sample.png');
+  const sprite = new PIXI.Sprite(spriteTexture);
+
+  sprite.position.set(430, 250);
+  sprite.anchor.set(0.5);
+  sprite.scale.set(0.6);
+  sprite.angle = -15;
+  sprite.eventMode = 'static';
+  sprite.cursor = 'pointer';
+
+  sprite.on('pointerdown', () => {
+    console.log('sprite pointerdown!');
+  });
+
+  sprite.on('pointerup', () => {
+    console.log('sprite pointerup!');
+  });
+
+  mainContainer.addChild(subContainer, g1, g2, sprite);
 
   return mainContainer;
 }

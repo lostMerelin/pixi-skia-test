@@ -27,7 +27,7 @@ const pixiRoot: HTMLDivElement = pixiRootElement;
 const skiaCanvas: HTMLCanvasElement = skiaCanvasElement;
 
 const pixiApp = createPixiApp(pixiRoot);
-const mainContainer = createDemoScene();
+const mainContainer = await createDemoScene();
 
 pixiApp.stage.addChild(mainContainer);
 
