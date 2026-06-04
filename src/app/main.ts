@@ -7,6 +7,7 @@ import { createDemoScene } from '../pixi/createDemoScene';
 import { initSkia } from '../skia/initSkia';
 import { SkiaRenderer } from '../skia/SkiaRenderer';
 import { bindSkiaPointerEvents } from '../events/bindSkiaPointerEvents';
+import { exportCanvasAsPng } from '../skia/exportCanvasAsPng';
 
 const pixiRootElement = document.querySelector<HTMLDivElement>('#pixi-root');
 const skiaCanvasElement = document.querySelector<HTMLCanvasElement>('#skia-canvas');
@@ -50,7 +51,11 @@ nextSceneButton?.addEventListener('click', () => {
 });
 
 exportPdfButton?.addEventListener('click', () => {
-  console.log('PDF export will be implemented later.');
+  rerender();
+
+  exportCanvasAsPng(skiaCanvas, 'pixi-skia-export.png');
+
+  console.log('Temporary PNG export completed');
 });
 
 async function bootstrapSkia(): Promise<void> {
